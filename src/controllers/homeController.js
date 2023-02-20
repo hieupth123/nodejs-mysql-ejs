@@ -1,6 +1,6 @@
 import db from "../models"
 import userService from '../services/userService'
-const getHomPage = async (req, res) => {
+const getHomePage = async (req, res) => {
     try {
         const users = await db.User.findAll()
         return res.render('homepage.ejs', { users: JSON.stringify(users) })
@@ -66,7 +66,7 @@ const deleteUser = async (req, res) => {
 }
 
 module.exports = {
-    getHomPage: getHomPage,
+    getHomePage: getHomePage,
     getCRUD: getCRUD,
     createUser: createUser,
     getAllUser: getAllUser,

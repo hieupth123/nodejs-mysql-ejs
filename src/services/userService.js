@@ -90,10 +90,73 @@ const deleteUser = async (id) => {
         }
     })
 }
+
+const userLogin = async (email, password) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // check userEmail 
+            let userData = {};
+            const user = await findOneUserByConditions({ email: email })
+            if (user) {
+                const check = await bcrypt.compareSync(password, user.password);
+                console.log('check: ', check)
+                if (check) {
+                    userData = {
+                        errCode: 0,
+                        errMessage: 'Ok',
+                        user: {
+                            email: user?.email,
+                            roleId: user?.roleId
+                        }
+                    }
+                } else {
+                    userData = {
+                        errCode: 2,
+                        errMessage: 'Wrong password!'
+                    }
+                }
+                resolve(userData)
+            } else {
+                userData = {
+                    errCode: 1,
+                    errMessage: 'Your email is not exist on our system. Plz try other email!'
+                }
+                resolve(userData)
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const findOneUserByConditions = async (conditions) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const user = await db.User.findOne({ where: conditions })
+            resolve(user)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const findAllUsersByConditions = async (conditions) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const users = await db.User.find({ where: conditions })
+            resolve(users)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+
 module.exports = {
     createUser,
     getAllUser,
     getUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    userLogin
 }
