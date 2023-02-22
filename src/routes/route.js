@@ -15,6 +15,11 @@ const initRoutes = (app) => {
     router.get('/delete-user', homeController.deleteUser)
 
     router.post('/api/login', userController.login)
+    router.get('/api/users', userController.getUsers)
+    router.get('/api/users/:id', userController.getUser)
+    router.post('/api/users', userController.createUser)
+    router.put('/api/users/:id', userController.editUser)
+    router.delete('/api/users/:id', userController.deleteUser)
     return app.use('/', router);
 }
 

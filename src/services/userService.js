@@ -2,26 +2,39 @@ import bcrypt from 'bcryptjs'
 import db from '../models/index'
 const salt = bcrypt.genSaltSync(10);
 
-const createUser = async (user) => {
+const createUser = async (body) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const hashPass = await hashUserPassword(user.password)
+            // check email exist
+            const user = await findOneUserByConditions({ email: body.email })
+            if (user) {
+                resolve({
+                    errCode: 1,
+                    errMessage: 'Your email is not exist on our system. Plz try other email!'
+                })
+                return
+            }
+            const hashPass = await hashUserPassword(body.password)
             const newUser = await db.User.create({
-                email: user.email,
+                email: body.email,
                 password: hashPass,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                address: user.address,
-                phoneNumber: user.phoneNumber,
-                gender: user.gender === '1' ? true : false,
+                firstName: body.firstName,
+                lastName: body.lastName,
+                address: body.address,
+                phoneNumber: body.phoneNumber,
+                gender: body.gender === '1' ? true : false,
                 // image: user.image,
-                roleId: user.roleId,
+                roleId: body.roleId,
                 // positionId: user.positionId,
                 createdAt: new Date(),
                 updatedAt: new Date()
 
             })
-            resolve(newUser)
+            resolve({
+                errCode: 0,
+                errMessage: 'Ok',
+                user: newUser
+            })
         } catch (error) {
             reject(error)
         }
@@ -62,19 +75,25 @@ const getUser = async (id) => {
     })
 }
 
-const updateUser = async (userData) => {
-    userData.id = parseInt(userData.id)
+const updateUser = async (id, body) => {
+    id = parseInt(id)
     return new Promise(async (resolve, reject) => {
         try {
-            const user = await db.User.findOne({ where: { id: userData.id } })
-            await db.User.update({
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                address: userData.address,
-                phoneNumber: userData.phoneNumber
-            }, { where: { id: userData.id } })
-            resolve(user)
+            // const user = await db.User.findOne({ where: { id } })
+            const newValues = {}
+            if (body.firstName) newValues.firstName = body.firstName
+            if (body.lastName) newValues.lastName = body.lastName
+            if (body.address) newValues.address = body.address
+            if (body.gender) newValues.address = body.gender === '1' ? true : false
+            if (body.phoneNumber) newValues.phoneNumber = body.phoneNumber
+            const data = await db.User.update({ ...body }, { where: { id } })
+            if (data[0] === 1) {
+                resolve({ errCode: 0, errMessage: 'Update user successfull' })
+            } else {
+                resolve({ errCode: 1, errMessage: 'User is not existing!' })
+            }
         } catch (error) {
+            console.log(error)
             reject(error)
         }
     })
@@ -83,8 +102,13 @@ const updateUser = async (userData) => {
 const deleteUser = async (id) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const user = await db.User.destroy({ where: { id: id } })
-            resolve(user)
+            const deletedUser = await db.User.destroy({ where: { id: id } })
+            if (deletedUser === 1) {
+                resolve({ errCode: 0, errMessage: 'Ok' })
+            } else {
+                resolve({ errCode: 1, errMessage: 'User is not existing!' })
+            }
+
         } catch (error) {
             reject(error)
         }
@@ -99,7 +123,6 @@ const userLogin = async (email, password) => {
             const user = await findOneUserByConditions({ email: email })
             if (user) {
                 const check = await bcrypt.compareSync(password, user.password);
-                console.log('check: ', check)
                 if (check) {
                     userData = {
                         errCode: 0,

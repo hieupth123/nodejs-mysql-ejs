@@ -43,7 +43,7 @@ const getEditUser = async (req, res) => {
 
 const editUser = async (req, res) => {
     if (req.body.id) {
-        const user = await userService.updateUser(req.body)
+        const user = await userService.updateUser(req.body.id, req.body)
         return res.redirect('/get-users')
     } else {
         return res.send('Can not update this user')
